@@ -8,8 +8,11 @@ namespace FancyScrollView
 {
     public class Scroller : UIBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler
     {
-        [SerializeField] RectTransform viewport = default;
-        [SerializeField] ScrollDirection directionOfRecognize = ScrollDirection.Vertical;
+        /// <summary>
+        /// 与ScrollView的CellContainer保持一致
+        /// </summary>
+        [SerializeField,Header("FancyScrollView.cellContainer")]internal RectTransform viewport;
+        [SerializeField] internal ScrollDirection directionOfRecognize = ScrollDirection.Vertical;
         [SerializeField] MovementType movementType = MovementType.Elastic;
         [SerializeField] float elasticity = 0.1f;
         [SerializeField] float scrollSensitivity = 1f;
@@ -37,7 +40,7 @@ namespace FancyScrollView
         bool dragging;
         float velocity;
 
-        enum ScrollDirection
+       public enum ScrollDirection
         {
             Vertical,
             Horizontal,
@@ -85,20 +88,32 @@ namespace FancyScrollView
 
             public void Complete()
             {
-                OnComplete?.Invoke();
+                if (OnComplete != null) {
+                    OnComplete.Invoke();
+                }
                 Reset();
             }
         }
 
-        public void OnValueChanged(Action<float> callback) => onValueChanged = callback;
+        public void OnValueChanged(Action<float> callback) {
+            onValueChanged = callback;
+        }
 
-        public void OnSelectionChanged(Action<int> callback) => onSelectionChanged = callback;
+        public void OnSelectionChanged(Action<int> callback) {
+            onSelectionChanged = callback;
+        }
 
-        public void SetTotalCount(int totalCount) => this.totalCount = totalCount;
+        public void SetTotalCount(int totalCount) {
+            this.totalCount = totalCount;
+        }
 
-        public void ScrollTo(int index, float duration, Action onComplete = null) => ScrollTo(index, duration, Ease.OutCubic, onComplete);
+        public void ScrollTo(int index, float duration, Action onComplete = null) {
+            ScrollTo(index, duration, Ease.OutCubic, onComplete);
+        }
 
-        public void ScrollTo(int index, float duration, Ease easing, Action onComplete = null) => ScrollTo(index, duration, EasingFunction.Get(easing), onComplete);
+        public void ScrollTo(int index, float duration, Ease easing, Action onComplete = null) {
+            ScrollTo(index, duration, EasingFunction.Get(easing), onComplete);
+        }
 
         public void ScrollTo(int index, float duration, Func<float, float> easingFunction, Action onComplete = null)
         {
@@ -165,12 +180,12 @@ namespace FancyScrollView
             {
                 return;
             }
-
+            Vector2 localCursor;
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 viewport,
                 eventData.position,
                 eventData.pressEventCamera,
-                out var localCursor))
+                out  localCursor))
             {
                 return;
             }
@@ -205,9 +220,13 @@ namespace FancyScrollView
             dragging = false;
         }
 
-        float ViewportSize => directionOfRecognize == ScrollDirection.Horizontal
-            ? viewport.rect.size.x
-            : viewport.rect.size.y;
+        float ViewportSize {
+            get {
+                return directionOfRecognize == ScrollDirection.Horizontal
+? viewport.rect.size.x
+: viewport.rect.size.y;
+            }
+        }
 
         float CalculateOffset(float position)
         {
@@ -232,13 +251,20 @@ namespace FancyScrollView
         void UpdatePosition(float position)
         {
             currentScrollPosition = position;
-            onValueChanged?.Invoke(currentScrollPosition);
+            if (onValueChanged != null) {
+                onValueChanged.Invoke(currentScrollPosition);
+            }
         }
 
-        void UpdateSelection(int index) => onSelectionChanged?.Invoke(index);
+        void UpdateSelection(int index) {
+            if (onSelectionChanged != null) {
+                onSelectionChanged.Invoke(index);
+            }
+        }
 
-        float RubberDelta(float overStretching, float viewSize) =>
-            (1 - 1 / (Mathf.Abs(overStretching) * 0.55f / viewSize + 1)) * viewSize * Mathf.Sign(overStretching);
+        float RubberDelta(float overStretching, float viewSize) {
+            return (1 - 1 / (Mathf.Abs(overStretching) * 0.55f / viewSize + 1)) * viewSize * Mathf.Sign(overStretching);
+        }
 
         void Update()
         {
@@ -336,9 +362,11 @@ namespace FancyScrollView
             prevScrollPosition = currentScrollPosition;
         }
 
-        int CalculateDestinationIndex(int index) => movementType == MovementType.Unrestricted
-            ? CalculateClosestIndex(index)
-            : Mathf.Clamp(index, 0, totalCount - 1);
+        int CalculateDestinationIndex(int index) {
+            return movementType == MovementType.Unrestricted
+? CalculateClosestIndex(index)
+: Mathf.Clamp(index, 0, totalCount - 1);
+        }
 
         int CalculateClosestIndex(int index)
         {
@@ -353,6 +381,8 @@ namespace FancyScrollView
             return Mathf.RoundToInt(diff + currentScrollPosition);
         }
 
-        float CircularPosition(float p, int size) => size < 1 ? 0 : p < 0 ? size - 1 + (p + 1) % size : p % size;
+        float CircularPosition(float p, int size) {
+            return size < 1 ? 0 : p < 0 ? size - 1 + (p + 1) % size : p % size;
+        }
     }
 }

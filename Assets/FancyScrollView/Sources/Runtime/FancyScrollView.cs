@@ -6,10 +6,13 @@ namespace FancyScrollView
 {
     public abstract class FancyScrollView<TItemData, TContext> : MonoBehaviour where TContext : class, new()
     {
-        [SerializeField, Range(float.Epsilon, 1f)] protected float cellInterval = 0.2f;
-        [SerializeField, Range(0f, 1f)] protected float scrollOffset = 0.5f;
+        /// <summary>
+        /// item相对与父容器高或宽间隔
+        /// </summary>
+        [SerializeField, Range(float.Epsilon, 2f)]  protected float cellInterval = 0.2f;
+        [SerializeField, Range(0f, 1f)]  protected float scrollOffset = 0.5f;
         [SerializeField] protected bool loop = false;
-        [SerializeField] protected Transform cellContainer = default;
+        [SerializeField]internal protected Transform cellContainer ;
 
         readonly IList<FancyScrollViewCell<TItemData, TContext>> pool =
             new List<FancyScrollViewCell<TItemData, TContext>>();
@@ -17,8 +20,10 @@ namespace FancyScrollView
         float currentPosition;
 
         protected abstract GameObject CellPrefab { get; }
-        protected IList<TItemData> ItemsSource { get; set; } = new List<TItemData>();
-        protected TContext Context { get; } = new TContext();
+        private  IList<TItemData> m_ItemsSource=new  List<TItemData>();
+        protected IList<TItemData> ItemsSource { get { return m_ItemsSource; } set { m_ItemsSource = value; } } 
+        private TContext m_context = new TContext();
+        protected TContext Context { get { return m_context; } } 
 
         /// <summary>
         /// Updates the contents.
@@ -33,13 +38,17 @@ namespace FancyScrollView
         /// <summary>
         /// Refreshes the cells.
         /// </summary>
-        protected void Refresh() => UpdatePosition(currentPosition, true);
+        protected void Refresh() {
+            UpdatePosition(currentPosition, true);
+        }
 
         /// <summary>
         /// Updates the scroll position.
         /// </summary>
         /// <param name="position">Position.</param>
-        protected void UpdatePosition(float position) => UpdatePosition(position, false);
+        protected void UpdatePosition(float position) {
+            UpdatePosition(position, false);
+        }
 
         void UpdatePosition(float position, bool forceRefresh)
         {
@@ -61,25 +70,26 @@ namespace FancyScrollView
         {
             if (CellPrefab == null)
             {
-                throw new NullReferenceException(nameof(CellPrefab));
+                throw new NullReferenceException("CellPrefab");
             }
 
             if (cellContainer == null)
             {
-                throw new MissingComponentException(nameof(cellContainer));
+                throw new MissingComponentException("cellContainer");
             }
 
             var addCount = Mathf.CeilToInt((1f - firstPosition) / cellInterval) - pool.Count;
             for (var i = 0; i < addCount; i++)
             {
-                var cell = Instantiate(CellPrefab, cellContainer).GetComponent<FancyScrollViewCell<TItemData, TContext>>();
+                var cellGo = Instantiate(CellPrefab, cellContainer);
+                cellGo.GetComponent<RectTransform>().anchoredPosition3D = Vector3.zero;
+                var cell= cellGo.GetComponent<FancyScrollViewCell<TItemData, TContext>>();
                 if (cell == null)
                 {
                     throw new MissingComponentException(
-                        $"FancyScrollViewCell<{typeof(TItemData).FullName}, {typeof(TContext).FullName}> " +
-                        $"component not found in {CellPrefab.name}.");
-                }
-
+                        "FancyScrollViewCell<"+typeof(TItemData).FullName+ typeof(TContext).FullName +" > " +
+                        "component not found in "+CellPrefab.name);
+                }              
                 cell.SetupContext(Context);
                 cell.SetVisible(false);
                 pool.Add(cell);
@@ -116,7 +126,9 @@ namespace FancyScrollView
             }
         }
 
-        int CircularIndex(int i, int size) => size < 1 ? 0 : i < 0 ? size - 1 + (i + 1) % size : i % size;
+        int CircularIndex(int i, int size) {
+            return size < 1 ? 0 : i < 0 ? size - 1 + (i + 1) % size : i % size;
+        }
 
 #if UNITY_EDITOR
         bool cachedLoop;

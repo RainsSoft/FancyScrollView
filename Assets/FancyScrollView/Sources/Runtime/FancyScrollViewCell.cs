@@ -8,31 +8,39 @@ namespace FancyScrollView
         /// Gets or sets the index of the data.
         /// </summary>
         /// <value>The index of the data.</value>
-        public int Index { get; set; } = -1;
-
+        public int Index { get { return m_Index; } set { m_Index = value; } } 
+        private int m_Index = -1;
         /// <summary>
         /// Gets a value indicating whether this <see cref="T:FancyScrollView.FancyScrollViewCell`2"/> is visible.
         /// </summary>
         /// <value><c>true</c> if is visible; otherwise, <c>false</c>.</value>
-        public virtual bool IsVisible => gameObject.activeSelf;
+        public virtual bool IsVisible {
+            get {
+                return gameObject.activeSelf;
+            }
+        }
 
         /// <summary>
         /// Gets the context.
         /// </summary>
         /// <value>The context.</value>
-        protected TContext Context { get; private set; }
-
+        public TContext Context { get; protected set; }
+        public TItemData ItemData { get; protected set; }
         /// <summary>
         /// Setup the context.
         /// </summary>
         /// <param name="context">Context.</param>
-        public virtual void SetupContext(TContext context) => Context = context;
+        public virtual void SetupContext(TContext context) {
+            Context = context;
+        }
 
         /// <summary>
         /// Sets the visible.
         /// </summary>
         /// <param name="visible">If set to <c>true</c> visible.</param>
-        public virtual void SetVisible(bool visible) => gameObject.SetActive(visible);
+        public virtual void SetVisible(bool visible) {
+            gameObject.SetActive(visible);
+        }
 
         /// <summary>
         /// Updates the content.
@@ -49,6 +57,8 @@ namespace FancyScrollView
 
     public abstract class FancyScrollViewCell<TItemData> : FancyScrollViewCell<TItemData, FancyScrollViewNullContext>
     {
-        public sealed override void SetupContext(FancyScrollViewNullContext context) => base.SetupContext(context);
+        public sealed override void SetupContext(FancyScrollViewNullContext context) {
+            base.SetupContext(context);
+        }
     }
 }
